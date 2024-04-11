@@ -23,8 +23,6 @@ class Board:
         self._generate()
         for l in reversed(self.field): print(*l)
         if time_seconds != 1:
-            for object in self.objects:
-                object.move()
             time.sleep(1)
             self.render(time_seconds-1, tracer=tracer)
 
@@ -49,6 +47,7 @@ class Mobile(VisableObject):
 
     def render(self, b: Board):
         b.field[int(self.position[1])][int(self.position[0])] = self.symbol
+        self.move()
 
     def _get_speed(self) -> Vector:
         return self.speed + self.acceleration
