@@ -6,4 +6,4 @@ if __name__ == "__main__":
     sq = Square((25, 23), 5)
     b = Board((52, 47), [mp, p, sq])
     b.render(8)
-    print(type(mp.impuls))
+    #print(sq.area)

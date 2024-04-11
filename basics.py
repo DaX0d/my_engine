@@ -45,7 +45,7 @@ class Mobile(VisableObject):
                  acceleration: Vector) -> None:
         self.position, self.speed, self.acceleration = position, speed, acceleration
 
-    def render(self, b: Board):
+    def render(self, b: Board) -> None:
         b.field[int(self.position[1])][int(self.position[0])] = self.symbol
         self.move()
 
@@ -58,9 +58,9 @@ class Mobile(VisableObject):
     def move(self) -> None:
         self.position = self._get_position()
         self.speed = self._get_speed()
-
+    
     def __str__(self) -> str:
-        return f'''Mobile(
+        return f'''{self.__class__.__name__}(
     position: {self.position},
     speed: {self.speed},
     acceleration: {self.acceleration})'''
@@ -78,43 +78,41 @@ class Massive(Mobile):
                  mass: int) -> None:
         super().__init__(position, speed, acceleration)
         self.mass = mass
-        self._get_impuls()
+        self.impuls = self._get_impuls()
 
-    def _get_impuls(self):
-        self.impuls = self.speed * self.mass
+    def _get_impuls(self) -> Vector:
+        return self.speed * self.mass
 
     def move(self) -> None:
         super().move()
-        self._get_impuls()
+        self.impuls = self._get_impuls()
 
     def __str__(self) -> str:
-        return f'''Massive(
+        return f'''{self.__class__.__name__}(
     position: {self.position},
     speed: {self.speed},
     acceleration: {self.acceleration},
-    mass: {self.mass})'''
+    mass: {self.mass},
+    impuls: {self.impuls})'''
 
 
 class Square(VisableObject):
-    center: tuple[int, int]
+    corner: tuple[int, int]
     size: int
     area: list[tuple[int, int]]
     symbol = "◙"
 
-    def __init__(self, center: tuple[int, int], size: int) -> None:
-        self.center, self.size = center, size
+    def __init__(self, corner: tuple[int, int], size: int) -> None:
+        self.corner, self.size = corner, size
         self._get_area()
 
     def _get_area(self) -> None:
-        self.area = [(x, y) for x in range(self.center[0]-self.size//2, self.center[0]+self.size//2)
-                            for y in range(self.center[1]-self.size//2, self.center[1]+self.size//2)]
+        self.area = [(x, y) for x in range(self.corner[0], self.corner[0]+self.size)
+                            for y in range(self.corner[1], self.corner[1]+self.size)]
         
-    def render(self, b: Board):
+    def render(self, b: Board) -> None:
         for x, y in self.area:
             b.field[y][x] = self.symbol
-
-    def move(self):
-        pass
         
     def __eq__(self, value) -> bool:
         return self.center[0]-self.size/2 <= value.position[0] <= self.center[0]+self.size/2\
