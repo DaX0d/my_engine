@@ -69,6 +69,7 @@ class Mobile(VisableObject):
 class Massive(Mobile):
     mass: float
     symbol = "○"
+    impuls: Vector
 
     def __init__(self,
                  position: tuple[int, int],
@@ -77,6 +78,14 @@ class Massive(Mobile):
                  mass: int) -> None:
         super().__init__(position, speed, acceleration)
         self.mass = mass
+        self._get_impuls()
+
+    def _get_impuls(self):
+        self.impuls = self.speed * self.mass
+
+    def move(self) -> None:
+        super().move()
+        self._get_impuls()
 
     def __str__(self) -> str:
         return f'''Massive(
