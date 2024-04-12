@@ -60,9 +60,13 @@ class Mobile(VisableObject):
                  acceleration: Vector) -> None:
         self.position, self.speed, self.acceleration = position, speed, acceleration
 
-    def render(self, b: Board) -> None:
-        b.field[round(self.position[1])][round(self.position[0])] = self.symbol # Тут custom_round почему-то делает траекторию 
-        self.move()                                                             # ломанной, поэтому здесь стандартный round 
+    def is_in_field(self, board: Board) -> bool:
+        return all(0 <= self.position[n] < board.size[n] for n in range(2))
+
+    def render(self, board: Board) -> None:
+        if self.is_in_field(board):
+            board.field[round(self.position[1])][round(self.position[0])] = self.symbol
+        self.move()
 
     def _get_speed(self) -> Vector:
         return self.speed + self.acceleration
@@ -125,13 +129,18 @@ class Square(VisableObject):
         self.area = [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
                             for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
         
-    def render(self, b: Board) -> None:
+    def render(self, board: Board) -> None:
         for x, y in self.area:
-            b.field[y][x] = self.symbol
+            if self._is_in_board((x, y), board):
+                board.field[y][x] = self.symbol
         
     def __eq__(self, value) -> bool:
         return self.center[0]-self.size/2 <= value.position[0] <= self.center[0]+self.size/2\
                 and self.center[1]-self.size/2 <= value.position[1] <= self.center[1]+self.size/2
+    
+    @staticmethod
+    def _is_in_board(coords: tuple[int, int], board: Board) -> bool:
+        return all(0 <= coords[n] < board.size[n] for n in range(2))
 
 
 if __name__ == "__main__":
