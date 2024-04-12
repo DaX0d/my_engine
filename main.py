@@ -5,5 +5,5 @@ if __name__ == "__main__":
     a = Mobile((6.6, 7.3), Vector((3, 10.5)), Vector((-0.3, -1.5)))
     sq = Square((50, 43), 5)
     b = Board((52, 47), [bullet, sq, a])
-    b.render(17, tracer=True)
-    #print(sq.area)
+    b.render(17)
+    # print(a.position)

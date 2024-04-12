@@ -3,7 +3,8 @@ import time
 import os
 import math
 
-def custom_round(num):
+def custom_round(num: float) -> int:
+    '''Возвращает округленное число (математически, а не как это делает стандартный Python)'''
     sign = 1 if num >= 0 else -1
     abs_num = abs(num)
     integer_part = int(abs_num)
@@ -15,6 +16,7 @@ def custom_round(num):
 
 
 class Board:
+    '''Доска, на которой отображаются объекты.'''
     field: list[list]
     fill: str = " "
 
@@ -24,13 +26,16 @@ class Board:
         self.objects = objects
     
     def _generate(self) -> None:
+        '''Вызывает метод render у объекта из списка объектов на доске.'''
         for object in self.objects:
             object.render(self)
 
     def _get_empty_field(self) -> list[list]:
+        '''Возвращает пустую доску'''
         return [[self.fill for x in range(self.size[0])] for y in range(self.size[1])]
 
     def render(self, time_seconds: int, *, tracer=False) -> None:
+        '''Выводит в коммандную строку изображение доски с указанной длительностью'''
         os.system("cls")
         if not tracer:
             self.field = self._get_empty_field()
@@ -43,12 +48,14 @@ class Board:
 
 
 class VisableObject:
+    '''ИНТЕРФЕЙС видимого объекта'''
     symbol: str
     def render(self, b: Board) -> None:
-        pass
+        '''Размещает изображение объекта на доске'''
 
 
 class Mobile(VisableObject):
+    '''Способная перемещаться легкая материальная точка'''
     position: tuple[float, float]
     speed: Vector
     acceleration: Vector
@@ -61,6 +68,7 @@ class Mobile(VisableObject):
         self.position, self.speed, self.acceleration = position, speed, acceleration
 
     def is_in_field(self, board: Board) -> bool:
+        '''Проверка нахождения объекта в зоне видимости доски'''
         return all(0 <= self.position[n] < board.size[n] for n in range(2))
 
     def render(self, board: Board) -> None:
@@ -69,12 +77,15 @@ class Mobile(VisableObject):
         self.move()
 
     def _get_speed(self) -> Vector:
+        '''Возвращает новую скорось объекта'''
         return self.speed + self.acceleration
 
     def _get_position(self) -> tuple[int, int]:
+        '''Возвращает новую позицию объекта'''
         return tuple(self.position[n] + self.speed[n] + self.acceleration[n]/2 for n in range(2))
     
     def move(self) -> None:
+        '''Перемещает объект'''
         self.position = self._get_position()
         self.speed = self._get_speed()
     
@@ -86,6 +97,7 @@ class Mobile(VisableObject):
     
 
 class Massive(Mobile):
+    '''Перемещаемая массивная точка'''
     mass: float
     symbol = "○"
     impuls: Vector
@@ -100,6 +112,7 @@ class Massive(Mobile):
         self.impuls = self._get_impuls()
 
     def _get_impuls(self) -> Vector:
+        '''Возвращает импульс объекта'''
         return self.speed * self.mass
 
     def move(self) -> None:
@@ -116,6 +129,7 @@ class Massive(Mobile):
 
 
 class Square(VisableObject):
+    '''Статичный квадрат'''
     corner: tuple[float, float]
     size: int
     area: list[tuple[int, int]]
@@ -123,11 +137,12 @@ class Square(VisableObject):
 
     def __init__(self, corner: tuple[float, float], size: int) -> None:
         self.corner, self.size = corner, size
-        self._get_area()
+        self.area = self._get_area()
 
-    def _get_area(self) -> None:
-        self.area = [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
-                            for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
+    def _get_area(self) -> list[tuple[int, int]]:
+        '''Возвращает точки простанства, занимаемые квадратом'''
+        return [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
+                       for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
         
     def render(self, board: Board) -> None:
         for x, y in self.area:
@@ -140,18 +155,9 @@ class Square(VisableObject):
     
     @staticmethod
     def _is_in_board(coords: tuple[int, int], board: Board) -> bool:
+        '''Проверка нахождения точки в зоне видимости доски'''
         return all(0 <= coords[n] < board.size[n] for n in range(2))
 
 
 if __name__ == "__main__":
-    l = {
-        "speed": Vector((1, 2)),
-        "position": (0, 0),
-        "acceleration": Vector((0, -1)),
-        "mass": 10
-    }
-    a = Massive(**l)
-    print(a)
-    for i in range(4):
-        a.move()
-        print(a)
+    pass
