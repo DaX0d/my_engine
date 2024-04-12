@@ -33,6 +33,12 @@ class Board:
     def _get_empty_field(self) -> list[list]:
         '''Возвращает пустую доску'''
         return [[self.fill for x in range(self.size[0])] for y in range(self.size[1])]
+    
+    def collisions_check(self) -> None:
+        '''Проверяет наличие столкновений объектов на доске'''
+        for i in range(len(self.objects) - 1):
+            for j in range(i+1, len(self.objects)):
+                self.objects[i].collision_check(self.objects[j])
 
     def render(self, time_seconds: int, *, tracer=False) -> None:
         '''Выводит в коммандную строку изображение доски с указанной длительностью'''
@@ -40,6 +46,7 @@ class Board:
         if not tracer:
             self.field = self._get_empty_field()
         self._generate()
+        self.collisions_check()
         for l in reversed(self.field):
             print(*l)
         if time_seconds != 1:
@@ -84,6 +91,16 @@ class Mobile(VisableObject):
         '''Возвращает новую позицию объекта'''
         return tuple(self.position[n] + self.speed[n] + self.acceleration[n]/2 for n in range(2))
     
+    def collision_check(self, object) -> None:
+        match object.__class__.__name__:
+            case "Mobile":
+                if self.position == object.position:
+                    self.speed, object.speed = object.speed, self.speed
+            case "Massive":
+                if self.position == object.position:
+                    self.speed = -self.speed
+            
+    
     def move(self) -> None:
         '''Перемещает объект'''
         self.position = self._get_position()
@@ -93,7 +110,7 @@ class Mobile(VisableObject):
         return f'''{self.__class__.__name__}(
     position: {self.position},
     speed: {self.speed},
-    acceleration: {self.acceleration})'''
+    acceleration: {self.acceleration})\n'''
     
 
 class Massive(Mobile):
@@ -125,7 +142,7 @@ class Massive(Mobile):
     speed: {self.speed},
     acceleration: {self.acceleration},
     mass: {self.mass},
-    impuls: {self.impuls})'''
+    impuls: {self.impuls})\n'''
 
 
 class Square(VisableObject):

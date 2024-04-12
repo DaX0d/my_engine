@@ -1,9 +1,13 @@
 from basics import *
+import logging
+logging.basicConfig(filename="debug.log", level=logging.DEBUG)
 
 if __name__ == "__main__":
-    bullet = Massive((3, 35), Vector((3, 4)), Vector((0, -1)), 3)
-    a = Mobile((6.6, 7.3), Vector((3, 10.5)), Vector((-0.3, -1.5)))
-    sq = Square((50, 43), 5)
-    b = Board((52, 47), [bullet, sq, a])
-    b.render(17)
-    # print(a.position)
+    a = Massive((20, 20), Vector((3, 0)), Vector((0, 0)), 1)
+    a.symbol = "a"
+    b = Mobile((28, 20), Vector((-5, 0)), Vector((0, 0)))
+    b.symbol = "b"
+    board = Board((52, 47), [a, b])
+    board.render(10)
+    logging.debug(f"\na = {a}\n{a.__class__.__name__}\n")
+    logging.debug(f"\nb = {b}\n")
