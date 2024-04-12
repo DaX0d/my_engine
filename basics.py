@@ -38,13 +38,13 @@ class VisableObject:
 
 
 class Mobile(VisableObject):
-    position: tuple[int, int]
+    position: tuple[float, float]
     speed: Vector
     acceleration: Vector
     symbol = "•"
 
     def __init__(self,
-                 position: tuple[int, int],
+                 position: tuple[float, float],
                  speed: Vector,
                  acceleration: Vector) -> None:
         self.position, self.speed, self.acceleration = position, speed, acceleration
@@ -57,7 +57,7 @@ class Mobile(VisableObject):
         return self.speed + self.acceleration
 
     def _get_position(self) -> tuple[int, int]:
-        return tuple(round(self.position[n] + self.speed[n] + self.acceleration[n]/2) for n in range(2))
+        return tuple(self.position[n] + self.speed[n] + self.acceleration[n]/2 for n in range(2))
     
     def move(self) -> None:
         self.position = self._get_position()
@@ -76,7 +76,7 @@ class Massive(Mobile):
     impuls: Vector
 
     def __init__(self,
-                 position: tuple[int, int],
+                 position: tuple[float, float],
                  speed: Vector,
                  acceleration: Vector,
                  mass: int) -> None:
@@ -101,18 +101,18 @@ class Massive(Mobile):
 
 
 class Square(VisableObject):
-    corner: tuple[int, int]
+    corner: tuple[float, float]
     size: int
     area: list[tuple[int, int]]
     symbol = "◙"
 
-    def __init__(self, corner: tuple[int, int], size: int) -> None:
+    def __init__(self, corner: tuple[float, float], size: int) -> None:
         self.corner, self.size = corner, size
         self._get_area()
 
     def _get_area(self) -> None:
-        self.area = [(x, y) for x in range(self.corner[0], self.corner[0]+self.size)
-                            for y in range(self.corner[1], self.corner[1]+self.size)]
+        self.area = [(x, y) for x in range(round(self.corner[0]), round(self.corner[0]+self.size))
+                            for y in range(round(self.corner[1]), round(self.corner[1]+self.size))]
         
     def render(self, b: Board) -> None:
         for x, y in self.area:
