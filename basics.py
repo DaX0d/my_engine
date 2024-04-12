@@ -9,21 +9,25 @@ class Board:
 
     def __init__(self, size: tuple[int, int], objects: list) -> None:
         self.size = size
-        self.field = [[self.fill for x in range(size[0])] for y in range(size[1])]
+        self.field = self._get_empty_field()
         self.objects = objects
     
     def _generate(self) -> None:
         for object in self.objects:
             object.render(self)
 
+    def _get_empty_field(self) -> list[list]:
+        return [[self.fill for x in range(self.size[0])] for y in range(self.size[1])]
+
     def render(self, time_seconds: int, *, tracer=False) -> None:
         os.system("cls")
         if not tracer:
-            self.field = [[self.fill for x in range(self.size[0])] for y in range(self.size[1])]
+            self.field = self._get_empty_field()
         self._generate()
-        for l in reversed(self.field): print(*l)
+        for l in reversed(self.field):
+            print(*l)
         if time_seconds != 1:
-            time.sleep(1)
+            time.sleep(0.2)
             self.render(time_seconds-1, tracer=tracer)
 
 
@@ -53,7 +57,7 @@ class Mobile(VisableObject):
         return self.speed + self.acceleration
 
     def _get_position(self) -> tuple[int, int]:
-        return tuple(self.position[n] + self.speed[n] + self.acceleration[n]//2 for n in range(2))
+        return tuple(round(self.position[n] + self.speed[n] + self.acceleration[n]/2) for n in range(2))
     
     def move(self) -> None:
         self.position = self._get_position()
