@@ -1,6 +1,17 @@
 from vector import Vector
 import time
 import os
+import math
+
+def custom_round(num):
+    sign = 1 if num >= 0 else -1
+    abs_num = abs(num)
+    integer_part = int(abs_num)
+    fractional_part = abs_num - integer_part
+    rounded_fractional_part = math.floor(fractional_part) if fractional_part < 0.5 else math.ceil(fractional_part)
+    if rounded_fractional_part == 1:
+        integer_part += 1
+    return sign * (integer_part + rounded_fractional_part)
 
 
 class Board:
@@ -50,8 +61,8 @@ class Mobile(VisableObject):
         self.position, self.speed, self.acceleration = position, speed, acceleration
 
     def render(self, b: Board) -> None:
-        b.field[int(self.position[1])][int(self.position[0])] = self.symbol
-        self.move()
+        b.field[round(self.position[1])][round(self.position[0])] = self.symbol # Тут custom_round почему-то делает траекторию 
+        self.move()                                                             # ломанной, поэтому здесь стандартный round 
 
     def _get_speed(self) -> Vector:
         return self.speed + self.acceleration
@@ -111,8 +122,8 @@ class Square(VisableObject):
         self._get_area()
 
     def _get_area(self) -> None:
-        self.area = [(x, y) for x in range(round(self.corner[0]), round(self.corner[0]+self.size))
-                            for y in range(round(self.corner[1]), round(self.corner[1]+self.size))]
+        self.area = [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
+                            for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
         
     def render(self, b: Board) -> None:
         for x, y in self.area:
