@@ -96,9 +96,12 @@ class Mobile(VisableObject):
             case "Mobile":
                 if self.position == object.position:
                     self.speed, object.speed = object.speed, self.speed
+                    return
             case "Massive":
                 if self.position == object.position:
                     self.speed = -self.speed
+                    return
+        object.collision_check(self)
             
     
     def move(self) -> None:
@@ -169,6 +172,12 @@ class Square(VisableObject):
     def __eq__(self, value) -> bool:
         return self.center[0]-self.size/2 <= value.position[0] <= self.center[0]+self.size/2\
                 and self.center[1]-self.size/2 <= value.position[1] <= self.center[1]+self.size/2
+    
+    def collision_check(self, object) -> None:
+        match object.__class__.__name__:
+            case "Massive":
+                if object.position in self.area:
+                    object.speed = Vector((-object.speed[0], object.speed[1]))
     
     @staticmethod
     def _is_in_board(coords: tuple[int, int], board: Board) -> bool:
