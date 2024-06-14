@@ -15,6 +15,8 @@ def custom_round(num: float) -> int:
         integer_part += 1
     return sign * (integer_part + rounded_fractional_part)
 
+cos = lambda v, b: (v[0]*b[0] + v[1]*b[1]) / (math.sqrt(v[0]**2 + v[1]**2) * math.sqrt(b[0]**2 + b[1]**2))
+
 
 class Board:
     '''Доска, на которой отображаются объекты.'''
@@ -54,8 +56,8 @@ class Board:
         if not tracer:
             self.field = self._get_empty_field()
 
-        self._generate()
         self.collisions_check()
+        self._generate()
 
         for l in reversed(self.field):
             print(*l)
@@ -100,7 +102,7 @@ class Mobile(VisableObject):
 
     def is_in_field(self, board: Board) -> bool:
         '''Проверка нахождения объекта в зоне видимости доски'''
-        return all(0 <= self.position[n] < board.size[n] for n in range(2))
+        return all(0 <= round(self.position[n]) < board.size[n] for n in range(2))
 
 
     def _get_speed(self, FPS) -> Vector:
@@ -118,12 +120,15 @@ class Mobile(VisableObject):
 
 
     def collision_check(self, obj) -> None:
-        if isinstance(obj, Mobile):
+        if obj.__class__.__name__ == 'Mobile':
             if self._check_collision(obj):
                 self._resolve_collision(obj)
-        elif isinstance(obj, Massive):
+        elif obj.__class__.__name__ == 'Massive':
             if self._check_collision(obj):
-                self._resolve_collision(obj)
+                if cos(self.speed, obj.speed) < 0:
+                    self.speed = -self.speed + obj.speed
+                else:
+                    self.speed = self.speed + obj.speed
     
     
     def _check_collision(self, obj) -> bool:
@@ -195,15 +200,6 @@ class Massive(Mobile):
 
         self.speed = v1f
         obj.speed = v2f
-
-        # Корректировка позиций после столкновения
-        # overlap = Vector((self.position[0] - obj.position[0], self.position[1] - obj.position[1]))
-        # overlap_length = abs(overlap)
-        # if overlap_length != 0:
-        #     overlap = overlap / overlap_length  # нормализация вектора
-        #     correction = overlap * (1 / 2)
-        #     self.position = tuple(p + c for p, c in zip(self.position, correction))
-        #     obj.position = tuple(p - c for p, c in zip(obj.position, correction))
 
 
     def move(self, FPS) -> None:
