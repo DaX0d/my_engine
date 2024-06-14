@@ -75,6 +75,12 @@ class Vector:
         
     def __rmatmul__(self, other):
         return self @ other
+    
+    def __truediv__(self, scalar):
+        if isinstance(scalar, numbers.Real):
+            return Vector(n / scalar for n in self)
+        else:
+            return NotImplemented
 
     def __bool__(self):
         return bool(abs(self))
