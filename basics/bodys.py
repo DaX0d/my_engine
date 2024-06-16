@@ -3,6 +3,7 @@ import math
 from .board import Board
 from .vector import Vector
 
+
 def custom_round(num: float) -> int:
     '''Возвращает округленное число (математически, а не как это делает стандартный Python)'''
     sign = 1 if num >= 0 else -1
@@ -14,7 +15,11 @@ def custom_round(num: float) -> int:
         integer_part += 1
     return sign * (integer_part + rounded_fractional_part)
 
-cos = lambda v, b: (v[0]*b[0] + v[1]*b[1]) / (math.sqrt(v[0]**2 + v[1]**2) * math.sqrt(b[0]**2 + b[1]**2))
+# cos = lambda v, b: (v[0]*b[0] + v[1]*b[1]) / (math.sqrt(v[0]**2 + v[1]**2) * math.sqrt(b[0]**2 + b[1]**2))
+def cos(v, b) -> float:
+    if (math.sqrt(v[0]**2 + v[1]**2) == 0) or (math.sqrt(b[0]**2 + b[1]**2) == 0):
+        return 1
+    return (v[0]*b[0] + v[1]*b[1]) / (math.sqrt(v[0]**2 + v[1]**2) * math.sqrt(b[0]**2 + b[1]**2))
 
 
 
@@ -60,7 +65,7 @@ class Mobile(VisableObject):
     
 
     def _get_area(self) -> list[tuple[int, int]]:
-        return [self.position]
+        return [(custom_round(self.position[0]), custom_round(self.position[1]))]
 
 
     def collision_check(self, obj) -> None:
@@ -73,14 +78,7 @@ class Mobile(VisableObject):
     
     
     def collision(self, obj) -> bool:
-        try:
-            return (custom_round(self.position[0]) == custom_round(obj.position[0]) and
-                    custom_round(self.position[1]) == custom_round(obj.position[1]))
-        except:
-            try:
-                obj.collision(self)
-            except:
-                raise ValueError(f'Unable to collide {self.__class__.__name__} and {obj.__class__.__name__}')
+        return self._get_area()[0] in obj._get_area()
 
 
     def _resolve_Mobile(self, obj) -> None:
@@ -92,6 +90,17 @@ class Mobile(VisableObject):
             self.speed = -self.speed + obj.speed
         else:
             self.speed = self.speed + obj.speed
+
+    
+    def _resolve_Square(self, obj) -> None:
+        if self._get_area()[0] in ([(obj.corner[0] + n, obj.corner[1] + obj.size-1) for n in range(obj.size)] +
+                                   [(obj.corner[0] + n, obj.corner[1]) for n in range(obj.size)]):
+            self.speed = Vector((self.speed[0], -self.speed[1]))
+        elif self._get_area()[0] in ([(obj.corner[0] + obj.size, obj.corner[1] + n) for n in range(obj.size)] +
+                                     [(obj.corner[0], obj.corner[1] + n) for n in range(obj.size)]):
+            self.speed = Vector((-self.speed[0], self.speed[1]))
+        else:
+            print('!!!!!!!!!!!!!!!!!!!')
     
 
     def render(self, board: Board) -> None:
@@ -183,11 +192,11 @@ class Square(VisableObject):
         self.area = self._get_area()
 
     
-    def _is_in_area(self, obj) -> bool:
-        for coords in obj._get_area():
-            if all([(self.corner[n] <= coords[n] <= self.corner[n] + self.size) for n in range(2)]):
-                return True
-        return False
+    # def _is_in_area(self, obj) -> bool:
+    #     for coords in obj._get_area():
+    #         if all([(self.corner[n] <= coords[n] <= (self.corner[n] + self.size)) for n in range(2)]):
+    #             return True
+    #     return False
 
 
     def _get_area(self) -> list[tuple[int, int]]:
@@ -206,11 +215,15 @@ class Square(VisableObject):
             
     
     def collision(self, obj) -> bool:
-        return self._is_in_area(obj)
+        return any([c in self.area for c in obj._get_area()])
     
 
     def _resolve_Mobile(self, obj) -> None:
         pass
+
+
+    def _resolve_Massive(self, obj) -> None:
+        return self._resolve_Mobile(obj)
 
 
     def render(self, board: Board) -> None:
