@@ -1,8 +1,7 @@
-from vector import Vector
-import time
-import os
 import math
 
+from .board import Board
+from .vector import Vector
 
 def custom_round(num: float) -> int:
     '''Возвращает округленное число (математически, а не как это делает стандартный Python)'''
@@ -16,61 +15,6 @@ def custom_round(num: float) -> int:
     return sign * (integer_part + rounded_fractional_part)
 
 cos = lambda v, b: (v[0]*b[0] + v[1]*b[1]) / (math.sqrt(v[0]**2 + v[1]**2) * math.sqrt(b[0]**2 + b[1]**2))
-
-
-class Board:
-    '''Доска, на которой отображаются объекты.'''
-    field: list[list]
-    fill: str = " "
-    FPS = 5
-
-
-    def __init__(self, size: tuple[int, int], objects: list) -> None:
-        self.size = size
-        self.field = self._get_empty_field()
-        self.objects = objects
-    
-
-    def _generate(self) -> None:
-        '''Вызывает метод render у объекта из списка объектов на доске.'''
-        for object in self.objects:
-            object.render(self)
-
-
-    def _get_empty_field(self) -> list[list]:
-        '''Возвращает пустую доску'''
-        return [[self.fill for x in range(self.size[0])] for y in range(self.size[1])]
-    
-
-    def collisions_check(self) -> None:
-        '''Проверяет наличие столкновений объектов на доске'''
-        for i in range(len(self.objects) - 1):
-            for j in range(i+1, len(self.objects)):
-                self.objects[i].collision_check(self.objects[j])
-
-
-    def render(self, time_seconds: int, *, tracer=False) -> None:
-        '''Выводит в коммандную строку изображение доски с указанной длительностью'''
-        os.system("cls")
-
-        if not tracer:
-            self.field = self._get_empty_field()
-
-        self.collisions_check()
-        self._generate()
-
-        for l in reversed(self.field):
-            print(*l)
-        
-        if time_seconds > 1:
-            time.sleep(1/self.FPS)
-            self.render(time_seconds-1, tracer=tracer)
-
-
-    def simulate(self, time_seconds: int, *, traser=False, FPS=5) -> None:
-        self.FPS = FPS
-        self.render(time_seconds=time_seconds*self.FPS, tracer=traser)
-
 
 
 
@@ -116,28 +60,38 @@ class Mobile(VisableObject):
     
 
     def _get_area(self) -> list[tuple[int, int]]:
-        return [self._get_position()]
+        return [self.position]
 
 
     def collision_check(self, obj) -> None:
-        if obj.__class__.__name__ == 'Mobile':
-            if self._check_collision(obj):
-                self._resolve_collision(obj)
-        elif obj.__class__.__name__ == 'Massive':
-            if self._check_collision(obj):
-                if cos(self.speed, obj.speed) < 0:
-                    self.speed = -self.speed + obj.speed
-                else:
-                    self.speed = self.speed + obj.speed
+        if self.collision(obj):
+            method = getattr(self, f'_resolve_{obj.__class__.__name__}')
+            if not(method is None):
+                method(obj)
+            else:
+                raise AttributeError(f'No such attibute _resolve_{obj.__class__.__name__}')
     
     
-    def _check_collision(self, obj) -> bool:
-        return (custom_round(self.position[0]) == custom_round(obj.position[0]) and
-                custom_round(self.position[1]) == custom_round(obj.position[1]))
-    
+    def collision(self, obj) -> bool:
+        try:
+            return (custom_round(self.position[0]) == custom_round(obj.position[0]) and
+                    custom_round(self.position[1]) == custom_round(obj.position[1]))
+        except:
+            try:
+                obj.collision(self)
+            except:
+                raise ValueError(f'Unable to collide {self.__class__.__name__} and {obj.__class__.__name__}')
 
-    def _resolve_collision(self, obj) -> None:
+
+    def _resolve_Mobile(self, obj) -> None:
         self.speed, obj.speed = obj.speed, self.speed
+
+
+    def _resolve_Massive(self, obj) -> None:
+        if cos(self.speed, obj.speed) < 0:
+            self.speed = -self.speed + obj.speed
+        else:
+            self.speed = self.speed + obj.speed
     
 
     def render(self, board: Board) -> None:
@@ -181,15 +135,13 @@ class Massive(Mobile):
     def _get_impuls(self) -> Vector:
         '''Возвращает импульс объекта'''
         return self.speed * self.mass
-
-
-    def collision_check(self, obj) -> None:
-        if isinstance(obj, Massive):
-            if self._check_collision(obj):
-                self._resolve_collision(obj)
     
 
-    def _resolve_collision(self, obj) -> None:
+    def _resolve_Mobile(self, obj) -> None:
+        obj._resolve_Massive(self)
+
+
+    def _resolve_Massive(self, obj) -> None:
         '''Разрешает столкновение с другим массивным объектом'''
         m1, m2 = self.mass, obj.mass
         v1i, v2i = self.speed, obj.speed
@@ -230,29 +182,42 @@ class Square(VisableObject):
         self.corner, self.size = corner, size
         self.area = self._get_area()
 
+    
+    def _is_in_area(self, obj) -> bool:
+        for coords in obj._get_area():
+            if all([(self.corner[n] <= coords[n] <= self.corner[n] + self.size) for n in range(2)]):
+                return True
+        return False
+
 
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает точки простанства, занимаемые квадратом'''
         return [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
                        for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
-        
+    
+
+    def collision_check(self, obj) -> None:
+        if self.collision(obj):
+            method = getattr(self, f'_resolve_{obj.__class__.__name__}')
+            if not(method is None):
+                method(obj)
+            else:
+                raise AttributeError(f'No such attibute _resolve_{obj.__class__.__name__}')
+            
+    
+    def collision(self, obj) -> bool:
+        return self._is_in_area(obj)
+    
+
+    def _resolve_Mobile(self, obj) -> None:
+        pass
+
 
     def render(self, board: Board) -> None:
         for x, y in self.area:
             if self._is_in_board((x, y), board):
                 board.field[y][x] = self.symbol
-        
 
-    def __eq__(self, value) -> bool:
-        return self.center[0]-self.size/2 <= value.position[0] <= self.center[0]+self.size/2\
-                and self.center[1]-self.size/2 <= value.position[1] <= self.center[1]+self.size/2
-    
-
-    def collision_check(self, obj) -> None:
-        if isinstance(obj, Massive):
-            if obj.position in self.area:
-                obj.speed = Vector((-obj.speed[0], obj.speed[1]))
-    
 
     @staticmethod
     def _is_in_board(coords: tuple[int, int], board: Board) -> bool:
