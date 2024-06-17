@@ -6,11 +6,11 @@ import math
 # logging.basicConfig(filename="debug.log", format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
-    a = Massive((46, 32), Vector((1, 0)), Vector((0, 0)), 1)
-    a.symbol = 'a'
+    a = Massive((46, 32), Vector((3, 0)), Vector((0, 0)), 1)
+    # a.symbol = 'a'
     b = Square((50, 30), 3)
-    b.symbol = 'b'
-    board = Board((114, 64), [a, b])
+    # b.symbol = 'b'
+    board = Board((114, 64), [b, a])
     # board.fill = '-'
     try: 
         board.simulate(10, FPS=7, traser=False)

@@ -93,14 +93,16 @@ class Mobile(VisableObject):
 
     
     def _resolve_Square(self, obj) -> None:
-        if self._get_area()[0] in ([(obj.corner[0] + n, obj.corner[1] + obj.size-1) for n in range(obj.size)] +
+        if self._get_area()[0] in [obj.corner, (obj.corner[0] + obj.size-1, obj.corner[1]),
+                                   (obj.corner[0], obj.corner[1] + obj.size-1),
+                                   (obj.corner[0] + obj.size-1, obj.corner[1] + obj.size-1)]:
+            self.speed = -self.speed
+        elif self._get_area()[0] in ([(obj.corner[0] + n, obj.corner[1] + obj.size-1) for n in range(obj.size)] +
                                    [(obj.corner[0] + n, obj.corner[1]) for n in range(obj.size)]):
             self.speed = Vector((self.speed[0], -self.speed[1]))
         elif self._get_area()[0] in ([(obj.corner[0] + obj.size, obj.corner[1] + n) for n in range(obj.size)] +
                                      [(obj.corner[0], obj.corner[1] + n) for n in range(obj.size)]):
             self.speed = Vector((-self.speed[0], self.speed[1]))
-        else:
-            print('!!!!!!!!!!!!!!!!!!!')
     
 
     def render(self, board: Board) -> None:
@@ -147,7 +149,7 @@ class Massive(Mobile):
     
 
     def _resolve_Mobile(self, obj) -> None:
-        obj._resolve_Massive(self)
+        return obj._resolve_Massive(self)
 
 
     def _resolve_Massive(self, obj) -> None:
@@ -191,13 +193,6 @@ class Square(VisableObject):
         self.corner, self.size = corner, size
         self.area = self._get_area()
 
-    
-    # def _is_in_area(self, obj) -> bool:
-    #     for coords in obj._get_area():
-    #         if all([(self.corner[n] <= coords[n] <= (self.corner[n] + self.size)) for n in range(2)]):
-    #             return True
-    #     return False
-
 
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает точки простанства, занимаемые квадратом'''
@@ -219,7 +214,7 @@ class Square(VisableObject):
     
 
     def _resolve_Mobile(self, obj) -> None:
-        pass
+        return obj._resolve_Square(self)
 
 
     def _resolve_Massive(self, obj) -> None:
