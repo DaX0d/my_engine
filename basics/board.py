@@ -54,3 +54,9 @@ class Board:
     def simulate(self, time_seconds: int, *, traser=False, FPS=5) -> None:
         self.FPS = FPS
         self.render(time_seconds=time_seconds*self.FPS, tracer=traser)
+
+
+
+
+if __name__ == '__main__':
+    pass

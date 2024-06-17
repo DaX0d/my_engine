@@ -235,5 +235,29 @@ class Square(VisableObject):
 
 
 
+class MobileSquare(Square, Mobile):
+    symbol = '#'
+
+    def __init__(self, corner: tuple[float, float], size: int, speed: Vector, acceleration: Vector) -> None:
+        self.corner, self.size = corner, size
+        self.speed = speed
+        self.acceleration = acceleration
+        self.area = self._get_area()
+        self.position = self.corner
+
+
+    def render(self, board: Board) -> None:
+        super().render(board)
+        self.move(board.FPS)
+    
+
+    def move(self, FPS):
+        super().move(FPS)
+        self.corner = self.position
+        self.area = self._get_area()
+
+
+
+
 if __name__ == "__main__":
     pass
