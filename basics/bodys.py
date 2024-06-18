@@ -70,11 +70,15 @@ class Mobile(VisableObject):
 
     def collision_check(self, obj) -> None:
         if self.collision(obj):
-            method = getattr(self, f'_resolve_{obj.__class__.__name__}')
-            if not(method is None):
+            try:
+                method = getattr(self, f'_resolve_{obj.__class__.__name__}')
                 method(obj)
-            else:
-                raise AttributeError(f'No such attibute _resolve_{obj.__class__.__name__}')
+            except:
+                try:
+                    method = getattr(obj, f'_resolve_{self.__class__.__name__}')
+                    method(self)
+                except:
+                    raise AttributeError(f'Unable to collide {self.__class__.__name__} and {obj.__class__.__name__}')
     
     
     def collision(self, obj) -> bool:
@@ -103,7 +107,20 @@ class Mobile(VisableObject):
         elif self._get_area()[0] in ([(obj.corner[0] + obj.size, obj.corner[1] + n) for n in range(obj.size)] +
                                      [(obj.corner[0], obj.corner[1] + n) for n in range(obj.size)]):
             self.speed = Vector((-self.speed[0], self.speed[1]))
-    
+
+
+    def _resolve_MobileSquare(self, obj) -> None:
+        if self._get_area()[0] in [obj.corner, (obj.corner[0] + obj.size-1, obj.corner[1]),
+                                   (obj.corner[0], obj.corner[1] + obj.size-1),
+                                   (obj.corner[0] + obj.size-1, obj.corner[1] + obj.size-1)]:
+            self.speed = -self.speed + obj.speed
+        elif self._get_area()[0] in ([(obj.corner[0] + n, obj.corner[1] + obj.size-1) for n in range(obj.size)] +
+                                   [(obj.corner[0] + n, obj.corner[1]) for n in range(obj.size)]):
+            self.speed = Vector((self.speed[0], -self.speed[1])) + obj.speed
+        elif self._get_area()[0] in ([(obj.corner[0] + obj.size, obj.corner[1] + n) for n in range(obj.size)] +
+                                     [(obj.corner[0], obj.corner[1] + n) for n in range(obj.size)]):
+            self.speed = Vector((-self.speed[0], self.speed[1])) + obj.speed
+
 
     def render(self, board: Board) -> None:
         if self.is_in_field(board):
@@ -202,11 +219,15 @@ class Square(VisableObject):
 
     def collision_check(self, obj) -> None:
         if self.collision(obj):
-            method = getattr(self, f'_resolve_{obj.__class__.__name__}')
-            if not(method is None):
+            try:
+                method = getattr(self, f'_resolve_{obj.__class__.__name__}')
                 method(obj)
-            else:
-                raise AttributeError(f'No such attibute _resolve_{obj.__class__.__name__}')
+            except:
+                try:
+                    method = getattr(obj, f'_resolve_{self.__class__.__name__}')
+                    method(self)
+                except:
+                    raise AttributeError(f'Unable to collide {self.__class__.__name__} and {obj.__class__.__name__}')
             
     
     def collision(self, obj) -> bool:
@@ -236,6 +257,7 @@ class Square(VisableObject):
 
 
 class MobileSquare(Square, Mobile):
+    '''Подвижный крадрат'''
     symbol = '#'
 
     def __init__(self, corner: tuple[float, float], size: int, speed: Vector, acceleration: Vector) -> None:
@@ -244,6 +266,16 @@ class MobileSquare(Square, Mobile):
         self.acceleration = acceleration
         self.area = self._get_area()
         self.position = self.corner
+
+
+    def _get_area(self) -> list[tuple[int, int]]:
+        '''Возвращает точки простанства, занимаемые квадратом'''
+        return [(x, y) for x in range(round(self.corner[0]), round(self.corner[0]+self.size))
+                       for y in range(round(self.corner[1]), round(self.corner[1]+self.size))]
+
+
+    def _resolve_Mobile(self, obj) -> None:
+        return obj._resolve_MobileSquare(self)
 
 
     def render(self, board: Board) -> None:

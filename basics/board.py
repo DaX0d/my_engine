@@ -7,7 +7,7 @@ class Board:
     field: list[list]
     fill: str = " "
     FPS = 5
-
+    tracer = False
 
     def __init__(self, size: tuple[int, int], objects: list) -> None:
         self.size = size
@@ -33,27 +33,22 @@ class Board:
                 self.objects[i].collision_check(self.objects[j])
 
 
-    def render(self, time_seconds: int, *, tracer=False) -> None:
+    def render(self) -> None:
         '''Выводит в коммандную строку изображение доски с указанной длительностью'''
         os.system("cls")
-
-        if not tracer:
+        if not self.tracer:
             self.field = self._get_empty_field()
-
         self.collisions_check()  
         self._generate()
-
         for l in reversed(self.field):
-            print(*l)
-        
-        if time_seconds > 1:
-            time.sleep(1/self.FPS)
-            self.render(time_seconds-1, tracer=tracer)
+            print(*l)        
+        time.sleep(1/self.FPS)
 
 
-    def simulate(self, time_seconds: int, *, traser=False, FPS=5) -> None:
-        self.FPS = FPS
-        self.render(time_seconds=time_seconds*self.FPS, tracer=traser)
+    def simulate(self, time_seconds: int, *, tracer: bool = False, FPS: int = 5) -> None:
+        self.FPS, self.tracer = FPS, tracer
+        for i in range(time_seconds * self.FPS):
+            self.render()
 
 
 
