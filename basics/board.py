@@ -38,7 +38,7 @@ class Board:
         os.system("cls")
         if not self.tracer:
             self.field = self._get_empty_field()
-        self.collisions_check()  
+        self.collisions_check()
         self._generate()
         for l in reversed(self.field):
             print(*l)        
