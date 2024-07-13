@@ -79,7 +79,7 @@ class Mobile(VisableObject):
                     raise AttributeError(f'Unable to collide {slf_cls_nm} and {obj_cls_nm}')
     
     def collision(self, obj) -> bool:
-        '''Проверяет надичие коллизии между двумя объектами'''
+        '''Проверяет наличие коллизии между двумя объектами'''
         return self._get_area()[0] in obj._get_area()
 
     def _resolve_Mobile(self, obj) -> None:
@@ -209,14 +209,15 @@ class Square(VisableObject):
                     raise AttributeError(f'Unable to collide {slf_cls_nm} and {obj_cls_nm}')    
     
     def collision(self, obj) -> bool:
+        '''Проверяет наличие коллизии между двумя объектами'''
         return any([c in self.area for c in obj._get_area()])
 
     def _resolve_Mobile(self, obj) -> None:
-        if obj.area[0] in self.perimetr['corners']:
+        if obj._get_area()[0] in self.perimetr['corners']:
             obj.speed = -obj.speed
-        elif obj.area[0] in self.perimetr['horizontal']:
+        elif obj._get_area()[0] in self.perimetr['horizontal']:
             obj.speed = Vector((obj.speed[0], -obj.speed[1]))
-        elif obj.area[0] in self.perimetr['verticals']:
+        elif obj._get_area()[0] in self.perimetr['verticals']:
             obj.speed = Vector((-obj.speed[0], obj.speed[1]))
 
     def _resolve_Massive(self, obj) -> None:
@@ -250,7 +251,12 @@ class MobileSquare(Square, Mobile):
                        for y in range(round(self.corner[1]), round(self.corner[1]+self.size))]
 
     def _resolve_Mobile(self, obj) -> None:
-        return obj._resolve_MobileSquare(self)
+        if obj._get_area()[0] in self.perimetr['corners']:
+            obj.speed = -obj.speed + self.speed
+        elif obj._get_area()[0] in self.perimetr['horizontal']:
+            obj.speed = Vector((obj.speed[0], -obj.speed[1])) + self.speed
+        elif obj._get_area()[0] in self.perimetr['verticals']:
+            obj.speed = Vector((-obj.speed[0], obj.speed[1])) + self.speed
 
     def render(self, board: Board) -> None:
         super().render(board)
