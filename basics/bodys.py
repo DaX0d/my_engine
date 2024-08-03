@@ -215,6 +215,9 @@ class Square(VisableObject, CollidableObject):
     def _resolve_Massive(self, obj) -> None:
         self._resolve_Mobile(obj)
 
+    def _resolve_MobileSquare(self, obj) -> None:
+        obj._resolve_Square(self)
+
     def render(self, board: Board) -> None:
         for x, y in self.area:
             if self._is_in_board((x, y), board):
@@ -250,6 +253,24 @@ class MobileSquare(Square, Mobile):
             obj.speed = Vector((obj.speed[0], obj.speed[1] * cos(obj.speed, self.speed))) + self.speed
         elif obj._get_area()[0] in self.perimetr['verticals']:
             obj.speed = Vector((obj.speed[0] * cos(obj.speed, self.speed), obj.speed[1])) + self.speed
+
+    def _resolve_Square(self, obj) -> None:
+        if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
+            self.speed = -self.speed
+        elif [(s == o) for s in self.perimetr['verticals'] for o in obj.perimetr['verticals']].count(True) >= 2:
+            self.speed = Vector(self.speed[0], -self.speed[1])
+        elif [(s == o) for s in self.perimetr['horizontal'] for o in obj.perimetr['horizontal']].count(True) >= 2:
+            self.speed = Vector(-self.speed[0], self.speed[1])
+
+    def _resolve_MobileSquare(self, obj) -> None:
+        if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
+            self.speed, obj.speed = obj.speed, self.speed
+        elif [(s == o) for s in self.perimetr['verticals'] for o in obj.perimetr['verticals']].count(True) >= 2:
+            self.speed = Vector(self.speed[0], obj.speed[1])
+            obj.speed = Vector(obj.speed[0], self.speed[1])
+        elif [(s == o) for s in self.perimetr['horizontal'] for o in obj.perimetr['horizontal']].count(True) >= 2:
+            self.speed = Vector(obj.speed[0], self.speed[1])
+            obj.speed = Vector(self.speed[0], obj.speed[1])
 
     def render(self, board: Board) -> None:
         super().render(board)

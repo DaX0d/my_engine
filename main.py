@@ -4,7 +4,7 @@ from basics.vector import Vector
 
 def main():
     a = MobileSquare((15, 20), 5, Vector((3, 0)), Vector((0, 0)))
-    b = Massive((30, 23), Vector((1, 0)), Vector((0, 0)), 1)
+    b = MobileSquare((30, 20), 3, Vector((-1, 0)), Vector((0,0)))
 
     board = Board((115, 60), [a, b])
     # board.fill = '-'
