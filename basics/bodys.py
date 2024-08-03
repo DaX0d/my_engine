@@ -3,6 +3,7 @@ import math
 from .board import Board
 from .vector import Vector
 
+
 def custom_round(num: float) -> int:
     '''Возвращает округленное число (математически, а не как это делает стандартный Python)'''
     sign = 1 if num >= 0 else -1
@@ -34,7 +35,36 @@ class VisableObject:
         '''Размещает изображение объекта на доске'''
 
 
-class Mobile(VisableObject):
+class CollidableObject:
+    '''Осязаемый объект\n
+У каждого класса, наследуемого от него, должны быть реализованы методы разрешения коллизий со всеми существующими
+телами\n
+Например:\n
+    def _resolve_Mobile(self, obj) -> None:
+        """Разрешает коллизию с мобильным телом"""\n
+        self.speed, obj.speed = obj.speed, self.speed'''
+
+    def collision_check(self, obj) -> None:
+        '''Проверяет наличие коллизии двух объектов и вызывает нужный метод для ее разрешения'''
+        slf_cls_nm = self.__class__.__name__
+        obj_cls_nm = obj.__class__.__name__
+        if self.collision(obj):
+            try:
+                method = getattr(self, f'_resolve_{obj_cls_nm}')
+                method(obj)
+            except:
+                try:
+                    method = getattr(obj, f'_resolve_{slf_cls_nm}')
+                    method(self)
+                except:
+                    raise AttributeError(f'Unable to collide {slf_cls_nm} and {obj_cls_nm}')
+    
+    def collision(self, obj) -> bool:
+        '''Проверяет наличие коллизии между двумя объектами'''
+        return any([c in self._get_area() for c in obj._get_area()])
+
+
+class Mobile(VisableObject, CollidableObject):
     '''Способная перемещаться легкая материальная точка'''
     position: tuple[float, float]
     speed: Vector
@@ -62,25 +92,6 @@ class Mobile(VisableObject):
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает плащадь, занимаемую объектом на доске'''
         return [(custom_round(self.position[0]), custom_round(self.position[1]))]
-
-    def collision_check(self, obj) -> None:
-        '''Проверяет наличие коллизии двух объектов и вызывает нужный метод для ее разрешения'''
-        slf_cls_nm = self.__class__.__name__
-        obj_cls_nm = obj.__class__.__name__
-        if self.collision(obj):
-            try:
-                method = getattr(self, f'_resolve_{obj_cls_nm}')
-                method(obj)
-            except:
-                try:
-                    method = getattr(obj, f'_resolve_{slf_cls_nm}')
-                    method(self)
-                except:
-                    raise AttributeError(f'Unable to collide {slf_cls_nm} and {obj_cls_nm}')
-    
-    def collision(self, obj) -> bool:
-        '''Проверяет наличие коллизии между двумя объектами'''
-        return self._get_area()[0] in obj._get_area()
 
     def _resolve_Mobile(self, obj) -> None:
         '''Разрешает коллизию с мобильным телом'''
@@ -162,7 +173,7 @@ class Massive(Mobile):
     impuls: {self.impuls})\n'''
 
 
-class Square(VisableObject):
+class Square(VisableObject, CollidableObject):
     '''Статичный квадрат'''
     corner: tuple[float, float]
     size: int
@@ -186,31 +197,12 @@ class Square(VisableObject):
             'corners': [rnd_tpl(self.corner), rnd_tpl((self.corner[0] + self.size-1, self.corner[1])),
                         rnd_tpl((self.corner[0], self.corner[1] + self.size-1)),
                         rnd_tpl((self.corner[0] + self.size-1, self.corner[1] + self.size-1))],
-            'horizontal': ([rnd_tpl((self.corner[0] + n, self.corner[1] + self.size-1)) for n in range(self.size)] +
-                            [rnd_tpl(((self.corner[0] + n, self.corner[1]))) for n in range(self.size)]),
-            'verticals': ([rnd_tpl((self.corner[0] + self.size, self.corner[1] + n)) for n in range(self.size)] +
-                                     [rnd_tpl((self.corner[0], self.corner[1] + n)) for n in range(self.size)])
+            'horizontal': [rnd_tpl((self.corner[0] + n, self.corner[1] + self.size-1)) for n in range(self.size)] +
+                           [rnd_tpl((self.corner[0] + n, self.corner[1])) for n in range(self.size)],
+            'verticals': [rnd_tpl((self.corner[0] + self.size-1, self.corner[1] + n)) for n in range(self.size)] +
+                          [rnd_tpl((self.corner[0], self.corner[1] + n)) for n in range(self.size)]
         }
         return perimetr
-
-    def collision_check(self, obj) -> None:
-        '''Проверяет наличие коллизии двух объектов и вызывает нужный метод для ее разрешения'''
-        slf_cls_nm = self.__class__.__name__
-        obj_cls_nm = obj.__class__.__name__
-        if self.collision(obj):
-            try:
-                method = getattr(self, f'_resolve_{obj_cls_nm}')
-                method(obj)
-            except:
-                try:
-                    method = getattr(obj, f'_resolve_{slf_cls_nm}')
-                    method(self)
-                except:
-                    raise AttributeError(f'Unable to collide {slf_cls_nm} and {obj_cls_nm}')    
-    
-    def collision(self, obj) -> bool:
-        '''Проверяет наличие коллизии между двумя объектами'''
-        return any([c in self.area for c in obj._get_area()])
 
     def _resolve_Mobile(self, obj) -> None:
         if obj._get_area()[0] in self.perimetr['corners']:
@@ -244,6 +236,7 @@ class MobileSquare(Square, Mobile):
         self.acceleration = acceleration
         self.area = self._get_area()
         self.position = self.corner
+        self.perimetr = self._get_perimetr()
 
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает точки простанства, занимаемые квадратом'''
@@ -252,17 +245,17 @@ class MobileSquare(Square, Mobile):
 
     def _resolve_Mobile(self, obj) -> None:
         if obj._get_area()[0] in self.perimetr['corners']:
-            obj.speed = -obj.speed + self.speed
+            obj.speed = obj.speed * cos(obj.speed, self.speed) + self.speed
         elif obj._get_area()[0] in self.perimetr['horizontal']:
-            obj.speed = Vector((obj.speed[0], -obj.speed[1])) + self.speed
+            obj.speed = Vector((obj.speed[0], obj.speed[1] * cos(obj.speed, self.speed))) + self.speed
         elif obj._get_area()[0] in self.perimetr['verticals']:
-            obj.speed = Vector((-obj.speed[0], obj.speed[1])) + self.speed
+            obj.speed = Vector((obj.speed[0] * cos(obj.speed, self.speed), obj.speed[1])) + self.speed
 
     def render(self, board: Board) -> None:
         super().render(board)
         self.move(board.FPS)
 
-    def move(self, FPS):
+    def move(self, FPS) -> None:
         super().move(FPS)
         self.corner = self.position
         self.area = self._get_area()
