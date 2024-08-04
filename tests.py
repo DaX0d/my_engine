@@ -1,7 +1,7 @@
 import time
 
 from basics.board import Board
-from basics.bodys import Mobile, Square, Massive, MobileRectangle, Rectangle
+from basics.bodys import Mobile, Square, Massive, MobileRectangle, Rectangle, MobileSquare
 from basics.vector import Vector
 
 
@@ -16,9 +16,31 @@ def mobile_test():
     board = Board((115, 60), [a])
     board.simulate(10, tracer=True, FPS=10)
 
+def mobilerectangle_test():
+    a = MobileRectangle((39, 30), (10, 7), (1, 5), (0, -1))
+    board = Board((115, 60), [a])
+    board.simulate(10)
 
-ALL_TESTS = [square_test, mobile_test]
+def mobilerectangle_collisions_test():
+    a = MobileRectangle((20, 10), (10, 5), (4, 3))
+    b = Mobile((55, 50), (-2, -1), (0, -1))
+    board = Board((115, 60), [a, b])
+    board.simulate(10, FPS=10)
 
+def mobilesquare_test():
+    a = MobileSquare((20, 20), 5, (2, 3), (1, -1))
+    board = Board((115, 60), [a])
+    board.simulate(10)
+
+#==========================================================================================================
+ALL_TESTS = [
+    square_test,
+    mobile_test,
+    mobilerectangle_test,
+    mobilerectangle_collisions_test,
+    mobilesquare_test
+]
+#==========================================================================================================
 
 if __name__ == '__main__':
     try:

@@ -257,16 +257,16 @@ class MobileRectangle(Rectangle, Mobile):
 
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает точки простанства, занимаемые квадратом'''
-        return [(x, y) for x in range(round(self.corner[0]), round(self.corner[0]+self.size))
-                       for y in range(round(self.corner[1]), round(self.corner[1]+self.size))]
+        return [(x, y) for x in range(round(self.corner[0]), round(self.corner[0]+self.size[0]))
+                       for y in range(round(self.corner[1]), round(self.corner[1]+self.size[1]))]
 
     def _resolve_Mobile(self, obj) -> None:
         if obj._get_area()[0] in self.perimetr['corners']:
             obj.speed = obj.speed * cos(obj.speed, self.speed) + self.speed
         elif obj._get_area()[0] in self.perimetr['horizontal']:
-            obj.speed = Vector((obj.speed[0], obj.speed[1] * cos(obj.speed, self.speed))) + self.speed
+            obj.speed = Vector((obj.speed[0], obj.speed[1] * cos(obj.speed, self.speed) + self.speed[1]))
         elif obj._get_area()[0] in self.perimetr['verticals']:
-            obj.speed = Vector((obj.speed[0] * cos(obj.speed, self.speed), obj.speed[1])) + self.speed
+            obj.speed = Vector((obj.speed[0] * cos(obj.speed, self.speed) + self.spee[0], obj.speed[1]))
 
     def _resolve_Rectangle(self, obj) -> None:
         if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
