@@ -30,7 +30,6 @@ class VisableObject:
     '''ИНТЕРФЕЙС видимого объекта'''
     symbol: str
 
-
     def render(self, b: Board) -> None:
         '''Размещает изображение объекта на доске'''
 
@@ -111,7 +110,7 @@ class Mobile(VisableObject, CollidableObject):
     def _resolve_Square(self, obj) -> None:
         self._resolve_Rectangle(obj)
 
-    def _resolve_MobileSquare(self, obj) -> None:
+    def _resolve_MobileRectangle(self, obj) -> None:
         '''Разрашает коллизию с подвижным квадратом'''
         obj._resolve_Mobile(self)
 
@@ -218,7 +217,7 @@ class Rectangle(VisableObject, CollidableObject):
     def _resolve_Massive(self, obj) -> None:
         self._resolve_Mobile(obj)
 
-    def _resolve_MobileSquare(self, obj) -> None:
+    def _resolve_MobileRectangle(self, obj) -> None:
         obj._resolve_Square(self)
 
     def render(self, board: Board) -> None:
@@ -241,13 +240,13 @@ class Square(Rectangle):
         super().__init__(corner, sz)
 
 
-class MobileSquare(Square, Mobile):
+class MobileRectangle(Rectangle, Mobile):
     '''Подвижный крадрат'''
     symbol = '#'
 
     def __init__(self,
                  corner: tuple[float, float],
-                 size: int,
+                 size: tuple[int, int],
                  speed: tuple[float, float],
                  acceleration: tuple[float, float] = (0, 0)) -> None:
         super().__init__(corner, size)
@@ -280,7 +279,7 @@ class MobileSquare(Square, Mobile):
     def _resolve_Square(self, obj) -> None:
         self._resolve_Rectangle(obj)
 
-    def _resolve_MobileSquare(self, obj) -> None:
+    def _resolve_MobileRectangle(self, obj) -> None:
         if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
             self.speed, obj.speed = obj.speed, self.speed
         elif [(s == o) for s in self.perimetr['verticals'] for o in obj.perimetr['verticals']].count(True) >= 2:
@@ -299,6 +298,18 @@ class MobileSquare(Square, Mobile):
         self.corner = self.position
         self.area = self._get_area()
         self.perimetr = self._get_perimetr()
+
+    
+class MobileSquare(MobileRectangle):
+    '''Подвижный квадрат'''
+
+    def __init__(self,
+                 corner: tuple[float, float],
+                 size: int,
+                 speed: tuple[float, float],
+                 acceleration: tuple[float, float] = (0, 0)) -> None:
+        sz = (size, size)
+        super().__init__(corner, sz, speed, acceleration)
 
 
 if __name__ == "__main__":

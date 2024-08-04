@@ -1,7 +1,7 @@
 import time
 
 from basics.board import Board
-from basics.bodys import Mobile, Square, Massive, MobileSquare, Rectangle
+from basics.bodys import Mobile, Square, Massive, MobileRectangle, Rectangle
 from basics.vector import Vector
 
 
