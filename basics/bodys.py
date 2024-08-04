@@ -73,9 +73,9 @@ class Mobile(VisableObject, CollidableObject):
 
     def __init__(self,
                  position: tuple[float, float],
-                 speed: Vector,
-                 acceleration: Vector) -> None:
-        self.position, self.speed, self.acceleration = position, speed, acceleration
+                 speed: tuple[float, float],
+                 acceleration: tuple[float, float] = (0, 0)) -> None:
+        self.position, self.speed, self.acceleration = position, Vector(speed), Vector(acceleration)
 
     def is_in_field(self, board: Board) -> bool:
         '''Проверка нахождения объекта в зоне видимости доски'''
@@ -140,9 +140,9 @@ class Massive(Mobile):
 
     def __init__(self,
                  position: tuple[float, float],
-                 speed: Vector,
-                 acceleration: Vector,
-                 mass: int) -> None:
+                 mass: int,
+                 speed: tuple[float, float],
+                 acceleration: tuple[float, float] = (0, 0)) -> None:
         super().__init__(position, speed, acceleration)
         self.mass = mass
         self.impuls = self._get_impuls()
@@ -245,10 +245,13 @@ class MobileSquare(Square, Mobile):
     '''Подвижный крадрат'''
     symbol = '#'
 
-    def __init__(self, corner: tuple[float, float], size: int, speed: Vector, acceleration: Vector) -> None:
-        self.corner, self.size = corner, size
-        self.speed = speed
-        self.acceleration = acceleration
+    def __init__(self,
+                 corner: tuple[float, float],
+                 size: int,
+                 speed: tuple[float, float],
+                 acceleration: tuple[float, float] = (0, 0)) -> None:
+        super().__init__(corner, size)
+        self.speed, self.acceleration = Vector(speed), Vector(acceleration)
         self.area = self._get_area()
         self.position = self.corner
         self.perimetr = self._get_perimetr()
