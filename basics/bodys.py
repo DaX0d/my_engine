@@ -104,9 +104,12 @@ class Mobile(VisableObject, CollidableObject):
         else:
             self.speed = self.speed + obj.speed
     
-    def _resolve_Square(self, obj) -> None:
+    def _resolve_Rectangle(self, obj) -> None:
         '''Разрашает коллизию с квадратом'''
         obj._resolve_Mobile(self)
+
+    def _resolve_Square(self, obj) -> None:
+        self._resolve_Rectangle(obj)
 
     def _resolve_MobileSquare(self, obj) -> None:
         '''Разрашает коллизию с подвижным квадратом'''
@@ -173,34 +176,34 @@ class Massive(Mobile):
     impuls: {self.impuls})\n'''
 
 
-class Square(VisableObject, CollidableObject):
+class Rectangle(VisableObject, CollidableObject):
     '''Статичный квадрат'''
     corner: tuple[float, float]
-    size: int
+    size: tuple[int, int]
     area: list[tuple[int, int]]
     symbol = "◙"
     perimetr: dict[str, list[tuple[int, int]]]
 
-    def __init__(self, corner: tuple[float, float], size: int) -> None:
+    def __init__(self, corner: tuple[float, float], size: tuple[int, int]) -> None:
         self.corner, self.size = corner, size
         self.area = self._get_area()
         self.perimetr = self._get_perimetr()
 
     def _get_area(self) -> list[tuple[int, int]]:
         '''Возвращает точки простанства, занимаемые квадратом'''
-        return [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size))
-                       for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size))]
+        return [(x, y) for x in range(custom_round(self.corner[0]), custom_round(self.corner[0]+self.size[0]))
+                       for y in range(custom_round(self.corner[1]), custom_round(self.corner[1]+self.size[1]))]
 
     def _get_perimetr(self) -> dict[str, list[tuple[int, int]]]:
         '''Возвращает точки, находящиеся по периметру квадрата'''
         perimetr = {
-            'corners': [rnd_tpl(self.corner), rnd_tpl((self.corner[0] + self.size-1, self.corner[1])),
-                        rnd_tpl((self.corner[0], self.corner[1] + self.size-1)),
-                        rnd_tpl((self.corner[0] + self.size-1, self.corner[1] + self.size-1))],
-            'horizontal': [rnd_tpl((self.corner[0] + n, self.corner[1] + self.size-1)) for n in range(self.size)] +
-                           [rnd_tpl((self.corner[0] + n, self.corner[1])) for n in range(self.size)],
-            'verticals': [rnd_tpl((self.corner[0] + self.size-1, self.corner[1] + n)) for n in range(self.size)] +
-                          [rnd_tpl((self.corner[0], self.corner[1] + n)) for n in range(self.size)]
+            'corners': [rnd_tpl(self.corner), rnd_tpl((self.corner[0] + self.size[0]-1, self.corner[1])),
+                        rnd_tpl((self.corner[0], self.corner[1] + self.size[1]-1)),
+                        rnd_tpl((self.corner[0] + self.size[0]-1, self.corner[1] + self.size[1]-1))],
+            'horizontal': [rnd_tpl((self.corner[0] + n, self.corner[1] + self.size[1]-1)) for n in range(self.size[0])]
+                          + [rnd_tpl((self.corner[0] + n, self.corner[1])) for n in range(self.size[0])],
+            'verticals': [rnd_tpl((self.corner[0] + self.size[0]-1, self.corner[1] + n)) for n in range(self.size[1])]
+                         + [rnd_tpl((self.corner[0], self.corner[1] + n)) for n in range(self.size[1])]
         }
         return perimetr
 
@@ -229,6 +232,15 @@ class Square(VisableObject, CollidableObject):
         return all(0 <= coords[n] < board.size[n] for n in range(2))
 
 
+class Square(Rectangle):
+    '''Четырехугольник'''
+    size: tuple[int, int]
+
+    def __init__(self, corner: tuple[float, float], size: int) -> None:
+        sz = (size, size)
+        super().__init__(corner, sz)
+
+
 class MobileSquare(Square, Mobile):
     '''Подвижный крадрат'''
     symbol = '#'
@@ -254,13 +266,16 @@ class MobileSquare(Square, Mobile):
         elif obj._get_area()[0] in self.perimetr['verticals']:
             obj.speed = Vector((obj.speed[0] * cos(obj.speed, self.speed), obj.speed[1])) + self.speed
 
-    def _resolve_Square(self, obj) -> None:
+    def _resolve_Rectangle(self, obj) -> None:
         if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
             self.speed = -self.speed
         elif [(s == o) for s in self.perimetr['verticals'] for o in obj.perimetr['verticals']].count(True) >= 2:
             self.speed = Vector(self.speed[0], -self.speed[1])
         elif [(s == o) for s in self.perimetr['horizontal'] for o in obj.perimetr['horizontal']].count(True) >= 2:
             self.speed = Vector(-self.speed[0], self.speed[1])
+
+    def _resolve_Square(self, obj) -> None:
+        self._resolve_Rectangle(obj)
 
     def _resolve_MobileSquare(self, obj) -> None:
         if any(((s == o) for s in self.perimetr['corners'] for o in obj.perimetr['corners'])):
