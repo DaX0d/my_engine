@@ -40,7 +40,7 @@ def massive_collisions_test():
     ]
     bodys[0].symbol = 'a'
     bodys[1].symbol = 'b'
-    board = Board((115, 60), bodys)
+    board = Board((115, 60), bodys, debug=True)
     board.simulate(10)
 
 @test
