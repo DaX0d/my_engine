@@ -69,6 +69,13 @@ def mobilesquare_test():
     board = Board((115, 60), [a])
     board.simulate(10)
 
+@test
+def print_time_test():
+    text = 'aboba'
+    start = time.time()
+    print(text)
+    end = time.time()
+    print(end - start)
 
 if __name__ == '__main__':
     try:
