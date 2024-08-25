@@ -33,7 +33,8 @@ class Board:
 
     def render(self) -> None:
         '''Выводит в коммандную строку изображение доски'''
-        if not self.debug: os.system("cls")
+        if not self.debug:
+            os.system("cls")
         if not self.tracer:
             self.field = self._get_empty_field()
         self.collisions_check()
@@ -53,7 +54,8 @@ class Board:
         for i in range(time_seconds * self.FPS):
             self.render()
         end_time = time.time()
-        if self.debug: print(end_time - start_time)
+        if self.debug:
+            print(end_time - start_time)
 
 
 if __name__ == '__main__':
