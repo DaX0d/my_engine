@@ -34,7 +34,7 @@ class Board:
     def render(self) -> None:
         '''Выводит в коммандную строку изображение доски'''
         if not self.debug:
-            os.system("cls")
+            os.system('cls' if os.name == 'nt' else 'clear')
         if not self.tracer:
             self.field = self._get_empty_field()
         self.collisions_check()
